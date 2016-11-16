@@ -76,6 +76,7 @@
       pdfjsLibs.pdfjsDisplayDOMUtils.getFilenameFromUrl;
     exports.addLinkAttributes =
       pdfjsLibs.pdfjsDisplayDOMUtils.addLinkAttributes;
+    window.pdfjsLibs = exports;
   } else {
     exports.WorkerMessageHandler =
       pdfjsLibs.pdfjsCoreWorker.WorkerMessageHandler;

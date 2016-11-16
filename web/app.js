@@ -107,14 +107,14 @@ function configure(PDFJS) {
   PDFJS.imageResourcesPath = './images/';
   if (typeof PDFJSDev !== 'undefined' &&
       PDFJSDev.test('FIREFOX || MOZCENTRAL || GENERIC || CHROME')) {
-    PDFJS.workerSrc = '../build/pdf.worker.js';
+    PDFJS.workerSrc = './pdf.worker.js';
   }
   if (typeof PDFJSDev === 'undefined' || !PDFJSDev.test('PRODUCTION')) {
-    PDFJS.cMapUrl = '../external/bcmaps/';
+    PDFJS.cMapUrl = './bcmaps/';
     PDFJS.cMapPacked = true;
     PDFJS.workerSrc = '../src/worker_loader.js';
   } else {
-    PDFJS.cMapUrl = '../web/cmaps/';
+    PDFJS.cMapUrl = './cmaps/';
     PDFJS.cMapPacked = true;
   }
 }

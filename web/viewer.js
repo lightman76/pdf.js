@@ -16,7 +16,7 @@
 
 'use strict';
 
-var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
+var DEFAULT_URL = '';
 
 if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
   (function rewriteUrlClosure() {
@@ -38,7 +38,7 @@ if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
 var pdfjsWebLibs;
 if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('PRODUCTION')) {
   pdfjsWebLibs = {
-    pdfjsWebPDFJS: window.pdfjsDistBuildPdf
+    pdfjsWebPDFJS: window.pdfjsDistBuildPdf || window.pdfjsLibs
   };
   (function () {
 //#expand __BUNDLE__
@@ -178,13 +178,15 @@ function webViewerLoad() {
       // issue 7448).
       require(['pdfjs-web/app', 'pdfjs-web/pdf_print_service'], function (web) {
         window.PDFViewerApplication = web.PDFViewerApplication;
-        web.PDFViewerApplication.run(config);
+        //web.PDFViewerApplication.run(config);
       });
     });
   } else {
     window.PDFViewerApplication = pdfjsWebLibs.pdfjsWebApp.PDFViewerApplication;
-    pdfjsWebLibs.pdfjsWebApp.PDFViewerApplication.run(config);
+    //pdfjsWebLibs.pdfjsWebApp.PDFViewerApplication.run(config);
   }
 }
 
-document.addEventListener('DOMContentLoaded', webViewerLoad, true);
+window.webViewerLoad = webViewerLoad;
+window.getViewerConfiguration = getViewerConfiguration;
+//document.addEventListener('DOMContentLoaded', webViewerLoad, true);
