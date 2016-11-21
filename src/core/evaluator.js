@@ -1459,10 +1459,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               var isSameTextLine = !textState.font ? false :
                 ((textState.font.vertical ? args[0] : args[1]) === 0);
               advance = args[0] - args[1];
+              var relativeAdvance = advance - textContentItem.lastAdvanceWidth - textContentItem.lastAdvanceHeight;
               if (combineTextItems &&
                   isSameTextLine && textContentItem.initialized &&
-                  advance > 0 &&
-                  advance <= textContentItem.fakeMultiSpaceMax) {
+                  relativeAdvance > 0 &&
+                  relativeAdvance <= textContentItem.fakeMultiSpaceMax) {
                 textState.translateTextLineMatrix(args[0], args[1]);
                 textContentItem.width +=
                   (args[0] - textContentItem.lastAdvanceWidth);
