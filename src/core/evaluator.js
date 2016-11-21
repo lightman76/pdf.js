@@ -1474,6 +1474,17 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 addFakeSpaces(diff, textContentItem.str);
                 break;
               }
+              //--scrible customization
+              // add space when moving to a new line unless it ends in a dash, in which case, remove the dash so copy paste results in contiguous text
+              if(!isSameTextLine && textContentItem.str.length > 0) {
+                var lastStr = textContentItem.str[textContentItem.str.length-1];
+                if(lastStr && lastStr.charAt(lastStr.length-1) != "-" && lastStr.charAt(lastStr.length-1) != " ") { //TODO: look at other dash variations &mdash, etc.
+                  textContentItem.str.push(" "); //add fake space at end of line unless it ends in a dash or space
+                } else if(lastStr && lastStr.charAt(lastStr.length-1) == "-") {
+                  textContentItem.str[textContentItem.str.length-1] = lastStr.substring(0,lastStr.length-1); //strip off the trailing - for mid word breaks.
+                }
+              }
+              //-- end scrible customization
 
               flushTextContentItem();
               textState.translateTextLineMatrix(args[0], args[1]);
