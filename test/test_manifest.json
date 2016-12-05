@@ -1613,6 +1613,13 @@
        "rounds": 1,
        "type": "eq"
     },
+    {  "id": "non-embedded-NuptialScript",
+       "file": "pdfs/non-embedded-NuptialScript.pdf",
+       "md5": "94225085d3fbf5d2d12b8be1c52bb3c1",
+       "link": false,
+       "rounds": 1,
+       "type": "eq"
+    },
     {  "id": "issue3323",
        "file": "pdfs/issue3323.pdf",
        "md5": "1a14ff574013caeafa9d598269988764",
@@ -1682,6 +1689,20 @@
        "rounds": 1,
        "link": false,
        "type": "eq"
+    },
+    {  "id": "issue7580-eq",
+       "file": "pdfs/issue7580.pdf",
+       "md5": "44dd5a9b4373fcab9890cf567722a766",
+       "rounds": 1,
+       "link": false,
+       "type": "eq"
+    },
+    {  "id": "issue7580-text",
+       "file": "pdfs/issue7580.pdf",
+       "md5": "44dd5a9b4373fcab9890cf567722a766",
+       "rounds": 1,
+       "link": false,
+       "type": "text"
     },
     {  "id": "issue6612-text",
        "file": "pdfs/issue6612.pdf",
@@ -1812,6 +1833,13 @@
        "link": false,
        "type": "eq"
     },
+    {  "id": "issue7835",
+       "file": "pdfs/issue7835.pdf",
+       "md5": "afb3206a83ee3fd19f3dea0480f942ec",
+       "rounds": 1,
+       "link": false,
+       "type": "eq"
+    },
     {  "id": "issue5972",
        "file": "pdfs/issue5972.pdf",
        "md5": "51f03e1d38410b04c9dda7e75fe8a0a3",
@@ -1824,6 +1852,13 @@
       "md5": "ffe9c571d0a1572e234253e6c7cdee6c",
       "rounds": 1,
       "type": "eq"
+    },
+    {  "id": "issue7855",
+       "file": "pdfs/issue7855.pdf",
+       "md5": "290d4d5da041ffbcb1ea5d3b0ed8ee91",
+       "rounds": 1,
+       "link": false,
+       "type": "eq"
     },
     {  "id": "issue6068",
        "file": "pdfs/issue6068.pdf",

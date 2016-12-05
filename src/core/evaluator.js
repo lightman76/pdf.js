@@ -1458,19 +1458,17 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               // Optimization to treat same line movement as advance
               var isSameTextLine = !textState.font ? false :
                 ((textState.font.vertical ? args[0] : args[1]) === 0);
-              advance = args[0] - args[1];
-              var relativeAdvance = advance - textContentItem.lastAdvanceWidth - textContentItem.lastAdvanceHeight;
+              diff = (args[0] - textContentItem.lastAdvanceWidth) -
+                (args[1] - textContentItem.lastAdvanceHeight);
               if (combineTextItems &&
                   isSameTextLine && textContentItem.initialized &&
-                  relativeAdvance > 0 &&
-                  relativeAdvance <= textContentItem.fakeMultiSpaceMax) {
+                  diff > 0 &&
+                  diff <= textContentItem.fakeMultiSpaceMax) {
                 textState.translateTextLineMatrix(args[0], args[1]);
                 textContentItem.width +=
                   (args[0] - textContentItem.lastAdvanceWidth);
                 textContentItem.height +=
                   (args[1] - textContentItem.lastAdvanceHeight);
-                diff = (args[0] - textContentItem.lastAdvanceWidth) -
-                       (args[1] - textContentItem.lastAdvanceHeight);
                 addFakeSpaces(diff, textContentItem.str);
                 break;
               }
@@ -1504,18 +1502,20 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               // Optimization to treat same line movement as advance.
               advance = textState.calcTextLineMatrixAdvance(
                 args[0], args[1], args[2], args[3], args[4], args[5]);
+              if (advance !== null) {
+                diff = (advance.width - textContentItem.lastAdvanceWidth) -
+                  (advance.height - textContentItem.lastAdvanceHeight);
+              }
               if (combineTextItems &&
                   advance !== null && textContentItem.initialized &&
-                  advance.value > 0 &&
-                  advance.value <= textContentItem.fakeMultiSpaceMax) {
+                  diff > 0 &&
+                  diff <= textContentItem.fakeMultiSpaceMax) {
                 textState.translateTextLineMatrix(advance.width,
                                                   advance.height);
                 textContentItem.width +=
                   (advance.width - textContentItem.lastAdvanceWidth);
                 textContentItem.height +=
                   (advance.height - textContentItem.lastAdvanceHeight);
-                diff = (advance.width - textContentItem.lastAdvanceWidth) -
-                       (advance.height - textContentItem.lastAdvanceHeight);
                 addFakeSpaces(diff, textContentItem.str);
                 break;
               }
@@ -1758,11 +1758,18 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       if (baseEncodingName) {
         properties.defaultEncoding = getEncoding(baseEncodingName).slice();
       } else {
-        encoding = (properties.type === 'TrueType' ?
-                    WinAnsiEncoding : StandardEncoding);
+        var isSymbolicFont = !!(properties.flags & FontFlags.Symbolic);
+        var isNonsymbolicFont = !!(properties.flags & FontFlags.Nonsymbolic);
+        // According to "Table 114" in section "9.6.6.1 General" (under
+        // "9.6.6 Character Encoding") of the PDF specification, a Nonsymbolic
+        // font should use the `StandardEncoding` if no encoding is specified.
+        encoding = StandardEncoding;
+        if (properties.type === 'TrueType' && !isNonsymbolicFont) {
+          encoding = WinAnsiEncoding;
+        }
         // The Symbolic attribute can be misused for regular fonts
         // Heuristic: we have to check if the font is a standard one also
-        if (!!(properties.flags & FontFlags.Symbolic)) {
+        if (isSymbolicFont) {
           encoding = MacRomanEncoding;
           if (!properties.file) {
             if (/Symbol/i.test(properties.name)) {
@@ -2002,14 +2009,14 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         widths = dict.get('W');
         if (widths) {
           for (i = 0, ii = widths.length; i < ii; i++) {
-            start = widths[i++];
+            start = xref.fetchIfRef(widths[i++]);
             code = xref.fetchIfRef(widths[i]);
             if (isArray(code)) {
               for (j = 0, jj = code.length; j < jj; j++) {
-                glyphsWidths[start++] = code[j];
+                glyphsWidths[start++] = xref.fetchIfRef(code[j]);
               }
             } else {
-              var width = widths[++i];
+              var width = xref.fetchIfRef(widths[++i]);
               for (j = start; j <= code; j++) {
                 glyphsWidths[j] = width;
               }
@@ -2018,19 +2025,27 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         }
 
         if (properties.vertical) {
-          var vmetrics = (dict.get('DW2') || [880, -1000]);
+          var vmetrics = dict.getArray('DW2') || [880, -1000];
           defaultVMetrics = [vmetrics[1], defaultWidth * 0.5, vmetrics[0]];
           vmetrics = dict.get('W2');
           if (vmetrics) {
             for (i = 0, ii = vmetrics.length; i < ii; i++) {
-              start = vmetrics[i++];
+              start = xref.fetchIfRef(vmetrics[i++]);
               code = xref.fetchIfRef(vmetrics[i]);
               if (isArray(code)) {
                 for (j = 0, jj = code.length; j < jj; j++) {
-                  glyphsVMetrics[start++] = [code[j++], code[j++], code[j]];
+                  glyphsVMetrics[start++] = [
+                    xref.fetchIfRef(code[j++]),
+                    xref.fetchIfRef(code[j++]),
+                    xref.fetchIfRef(code[j])
+                  ];
                 }
               } else {
-                var vmetric = [vmetrics[++i], vmetrics[++i], vmetrics[++i]];
+                var vmetric = [
+                  xref.fetchIfRef(vmetrics[++i]),
+                  xref.fetchIfRef(vmetrics[++i]),
+                  xref.fetchIfRef(vmetrics[++i])
+                ];
                 for (j = start; j <= code; j++) {
                   glyphsVMetrics[j] = vmetric;
                 }
@@ -2044,7 +2059,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         if (widths) {
           j = firstChar;
           for (i = 0, ii = widths.length; i < ii; i++) {
-            glyphsWidths[j++] = widths[i];
+            glyphsWidths[j++] = xref.fetchIfRef(widths[i]);
           }
           defaultWidth = (parseFloat(descriptor.get('MissingWidth')) || 0);
         } else {
@@ -2862,7 +2877,7 @@ var EvaluatorPreprocessor = (function EvaluatorPreprocessorClosure() {
                 argsLength--;
               }
               while (argsLength < numArgs && nonProcessedArgs.length !== 0) {
-                if (!args) {
+                if (args === null) {
                   args = [];
                 }
                 args.unshift(nonProcessedArgs.pop());
@@ -2871,17 +2886,18 @@ var EvaluatorPreprocessor = (function EvaluatorPreprocessorClosure() {
             }
 
             if (argsLength < numArgs) {
-              // If we receive too few args, it's not possible to possible
-              // to execute the command, so skip the command
-              info('Command ' + fn + ': because expected ' +
-                   numArgs + ' args, but received ' + argsLength +
-                   ' args; skipping');
-              args = null;
+              // If we receive too few arguments, it's not possible to execute
+              // the command, hence we skip the command.
+              warn('Skipping command ' + fn + ': expected ' + numArgs +
+                   ' args, but received ' + argsLength + ' args.');
+              if (args !== null) {
+                args.length = 0;
+              }
               continue;
             }
           } else if (argsLength > numArgs) {
             info('Command ' + fn + ': expected [0,' + numArgs +
-                 '] args, but received ' + argsLength + ' args');
+                 '] args, but received ' + argsLength + ' args.');
           }
 
           // TODO figure out how to type-check vararg functions
@@ -2896,7 +2912,7 @@ var EvaluatorPreprocessor = (function EvaluatorPreprocessorClosure() {
           }
           // argument
           if (obj !== null) {
-            if (!args) {
+            if (args === null) {
               args = [];
             }
             args.push(obj);

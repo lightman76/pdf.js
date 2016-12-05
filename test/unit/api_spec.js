@@ -515,7 +515,7 @@ describe('api', function() {
         expect(pageLabels[0]).toEqual(['i', 'ii', 'iii', '1']);
         expect(pageLabels[1]).toEqual(['Front Page1']);
         expect(pageLabels[2]).toEqual(['1', '2']);
-        expect(pageLabels[3]).toEqual(['X1']);
+        expect(pageLabels[3]).toEqual(['X3']);
 
         loadingTask0.destroy();
         loadingTask1.destroy();
@@ -769,6 +769,9 @@ describe('api', function() {
     it('gets ref', function () {
       expect(page.ref).toEqual({ num: 15, gen: 0 });
     });
+    it('gets userUnit', function () {
+      expect(page.userUnit).toEqual(1.0);
+    });
     it('gets view', function () {
       expect(page.view).toEqual([0, 0, 595.28, 841.89]);
     });
@@ -887,6 +890,115 @@ describe('api', function() {
         done.fail(reason);
       });
     });
+
+    describe('gets text content - check insertion of fake spaces (issue 7833)',
+      function() {
+      var loadingTask = null;
+
+      beforeAll(function(done){
+        var url = new URL('../pdfs/issue7833.pdf', window.location).href;
+        loadingTask = PDFJS.getDocument(url);
+        loadingTask.promise.then(done);
+      });
+
+      afterAll(function(){
+        loadingTask.destroy();
+        loadingTask = null;
+      });
+
+      function getPageTextContentPromise(pageNumber) {
+        return loadingTask.promise.then(function(pdfDoc) {
+          return pdfDoc.getPage(pageNumber).then(function (pdfPage) {
+            return pdfPage.getTextContent();
+          });
+        });
+      }
+
+      describe('for Td Tj Td tj sequences', function(){
+        it('should add single whitespace', function(done) {
+          getPageTextContentPromise(1).then(function(textContent){
+            expect(textContent.items.length).toEqual(1);
+            expect(textContent.items[0].str).toEqual(
+              'Hello supercalifragulisticexpialdocious World!');
+            done();
+          }).catch(function(reason) {
+            done.fail(reason);
+          });
+        });
+        it('should add two whitespaces between words', function(done) {
+          getPageTextContentPromise(2).then(function(textContent){
+            expect(textContent.items.length).toEqual(1);
+            expect(textContent.items[0].str).toEqual(
+              'Hello  supercalifragulisticexpialdocious  World!');
+            done();
+          }).catch(function(reason) {
+            done.fail(reason);
+          });
+        });
+        it('should add three whitespaces between words', function(done) {
+          getPageTextContentPromise(3).then(function(textContent){
+            expect(textContent.items.length).toEqual(1);
+            expect(textContent.items[0].str).toEqual(
+              'Hello   supercalifragulisticexpialdocious   World!');
+            done();
+          }).catch(function(reason) {
+            done.fail(reason);
+          });
+        });
+        it('should not add fake spaces to large gaps', function(done) {
+          getPageTextContentPromise(4).then(function(textContent){
+            expect(textContent.items.length).toEqual(3);
+            expect(textContent.items[0].str).toEqual('Hello');
+            expect(textContent.items[1].str).toEqual(
+              'supercalifragulisticexpialdocious');
+            expect(textContent.items[2].str).toEqual('World!');
+            done();
+          }).catch(function(reason) {
+            done.fail(reason);
+          });
+        });
+      });
+      describe('For Tm Tj Tm Tj sequences', function(){
+        it('should add single space between words', function(done){
+          getPageTextContentPromise(5).then(function(textContent){
+            expect(textContent.items.length).toEqual(1);
+            expect(textContent.items[0].str).toEqual('Hello World!');
+            done();
+          }).catch(function(reason) {
+            done.fail(reason);
+          });
+        });
+        it('should add two spaces between words', function(done){
+          getPageTextContentPromise(6).then(function(textContent){
+            expect(textContent.items.length).toEqual(1);
+            expect(textContent.items[0].str).toEqual('Hello  World!');
+            done();
+          }).catch(function(reason) {
+            done.fail(reason);
+          });
+        });
+        it('should add three spaces between words', function(done){
+          getPageTextContentPromise(7).then(function(textContent){
+            expect(textContent.items.length).toEqual(1);
+            expect(textContent.items[0].str).toEqual('Hello   World!');
+            done();
+          }).catch(function(reason) {
+            done.fail(reason);
+          });
+        });
+        it('should not add spaces between words', function(done){
+          getPageTextContentPromise(8).then(function(textContent){
+            expect(textContent.items.length).toEqual(2);
+            expect(textContent.items[0].str).toEqual('Hello');
+            expect(textContent.items[1].str).toEqual('World!');
+            done();
+          }).catch(function(reason) {
+            done.fail(reason);
+          });
+        });
+      });
+    });
+
     it('gets operator list', function(done) {
       var promise = page.getOperatorList();
       promise.then(function (oplist) {
